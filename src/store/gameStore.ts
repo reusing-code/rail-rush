@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { NODE_SIZE } from "../components/NodeDisplay";
 import type {
   GameState,
   GameNode,
@@ -22,7 +23,6 @@ interface GameActions {
   removeNode: (id: string) => void;
   addEdge: (source: string, target: string) => void;
   removeEdge: (id: string) => void;
-  updateNodeLabel: (id: string, label: string) => void;
   setStartingBalance: (balance: number) => void;
   setEditorMode: (mode: EditorMode) => void;
   onNodesChange: (nodes: GameNode[]) => void;
@@ -77,12 +77,12 @@ export const useGameStore = create<GameState & GameActions>()(
       addNode: (position) =>
         set((state) => {
           const count = state.nodeCounter + 1;
+          const half = NODE_SIZE / 2;
           const node: GameNode = {
             id: nextId("node"),
             type: "gameNode",
-            position,
+            position: { x: position.x - half, y: position.y - half },
             data: {
-              label: `Node ${count}`,
               chips: { RED: 0, BLUE: 0 },
             },
           };
@@ -123,13 +123,6 @@ export const useGameStore = create<GameState & GameActions>()(
       removeEdge: (id) =>
         set((state) => ({
           edges: state.edges.filter((e) => e.id !== id),
-        })),
-
-      updateNodeLabel: (id, label) =>
-        set((state) => ({
-          nodes: state.nodes.map((n) =>
-            n.id === id ? { ...n, data: { ...n.data, label } } : n
-          ),
         })),
 
       setStartingBalance: (balance) =>

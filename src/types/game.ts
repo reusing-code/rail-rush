@@ -10,7 +10,6 @@ export interface ChipCounts {
 }
 
 export interface GameNodeData {
-  label: string;
   chips: ChipCounts;
   [key: string]: unknown;
 }

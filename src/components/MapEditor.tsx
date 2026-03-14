@@ -370,7 +370,6 @@ function MapEditorInner() {
         ) : (
           <span>Drag nodes to move them</span>
         )}
-        <span>Double-click node to rename</span>
         <span>Click node to select, Delete to remove</span>
         {backgroundImage && !isConnectMode && (
           <span>Drag background image to reposition</span>
