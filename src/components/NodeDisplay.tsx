@@ -12,7 +12,6 @@ type GameNodeType = Node<
 
 function NodeDisplayInner({ data, selected }: NodeProps<GameNodeType>) {
   const phase = useGameStore((s) => s.phase);
-  const editorMode = useGameStore((s) => s.editorMode);
 
   const { RED, BLUE } = data.chips;
   const control = RED > BLUE ? "RED" : BLUE > RED ? "BLUE" : null;
@@ -39,13 +38,7 @@ function NodeDisplayInner({ data, selected }: NodeProps<GameNodeType>) {
       : "shadow-md";
 
   const cursorClass =
-    phase === "PLAYING"
-      ? "cursor-pointer"
-      : editorMode === "MOVE"
-        ? "cursor-grab"
-        : "cursor-crosshair";
-
-  const isConnectable = phase === "SETUP" && editorMode === "CONNECT";
+    phase === "PLAYING" ? "cursor-pointer" : "cursor-grab";
 
   const hasChips = RED > 0 || BLUE > 0;
 
@@ -54,12 +47,12 @@ function NodeDisplayInner({ data, selected }: NodeProps<GameNodeType>) {
       className={`rounded-full border-2 ${borderColor} ${bgColor} ${cursorClass} ${shadowClass} select-none relative flex items-center justify-center`}
       style={{ width: NODE_SIZE, height: NODE_SIZE }}
     >
-      {/* Invisible handle covering the full node for connections */}
+      {/* Invisible handle covering the full node — kept for React Flow internals */}
       <Handle
         type="source"
         position={Position.Right}
         className="!absolute !inset-0 !w-full !h-full !transform-none !rounded-full !border-none !bg-transparent !opacity-0 !top-0 !left-0"
-        isConnectable={isConnectable}
+        isConnectable={false}
       />
 
       {/* Chip counts — only shown during play when chips exist */}

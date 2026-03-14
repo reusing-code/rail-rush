@@ -15,7 +15,6 @@
 import type {
   GameState,
   GameNode,
-  GameEdge,
   BackgroundImageState,
 } from "../types/game";
 
@@ -32,8 +31,6 @@ interface CompactBg {
 interface CompactMapExport {
   /** Nodes: [x, y][] */
   n: [number, number][];
-  /** Edges: [sourceIndex, targetIndex][] */
-  e: [number, number][];
   /** Starting balance */
   b: number;
   /** Node counter */
@@ -100,24 +97,14 @@ function r(n: number): number {
 
 // --- Export functions ---
 
-function buildCompactMap(state: GameState): { compact: CompactMapExport; idToIndex: Map<string, number> } {
-  const idToIndex = new Map<string, number>();
-  const n: [number, number][] = [];
-
-  for (let i = 0; i < state.nodes.length; i++) {
-    const node = state.nodes[i];
-    idToIndex.set(node.id, i);
-    n.push([r(node.position.x), r(node.position.y)]);
-  }
-
-  const e: [number, number][] = state.edges.map((edge) => [
-    idToIndex.get(edge.source)!,
-    idToIndex.get(edge.target)!,
+function buildCompactMap(state: GameState): CompactMapExport {
+  const n: [number, number][] = state.nodes.map((node) => [
+    r(node.position.x),
+    r(node.position.y),
   ]);
 
   const compact: CompactMapExport = {
     n,
-    e,
     b: state.startingBalance,
     c: state.nodeCounter,
   };
@@ -132,18 +119,18 @@ function buildCompactMap(state: GameState): { compact: CompactMapExport; idToInd
     };
   }
 
-  return { compact, idToIndex };
+  return compact;
 }
 
 export async function exportMap(state: GameState): Promise<string> {
-  const { compact } = buildCompactMap(state);
+  const compact = buildCompactMap(state);
   const json = JSON.stringify(compact);
   const payload = await compress(json);
   return `M1:${payload}`;
 }
 
 export async function exportGame(state: GameState): Promise<string> {
-  const { compact } = buildCompactMap(state);
+  const compact = buildCompactMap(state);
 
   const gameCompact: CompactGameExport = {
     ...compact,
@@ -169,10 +156,8 @@ function rebuildFromCompact(
   existingBgDataUrl: string | null
 ): Partial<GameState> {
   // Rebuild nodes with new unique IDs
-  const indexToId: string[] = [];
-  const nodes: GameNode[] = compact.n.map(([x, y], i) => {
+  const nodes: GameNode[] = compact.n.map(([x, y]) => {
     const id = importId("node");
-    indexToId[i] = id;
     return {
       id,
       type: "gameNode" as const,
@@ -180,14 +165,6 @@ function rebuildFromCompact(
       data: { chips: { RED: 0, BLUE: 0 } },
     };
   });
-
-  const edges: GameEdge[] = compact.e.map(([si, ti]) => ({
-    id: importId("edge"),
-    source: indexToId[si],
-    target: indexToId[ti],
-    type: "straight" as const,
-    style: { stroke: "#888", strokeWidth: 3 },
-  }));
 
   let backgroundImage: BackgroundImageState | null = null;
   if (compact.bg) {
@@ -203,7 +180,6 @@ function rebuildFromCompact(
 
   return {
     nodes,
-    edges,
     startingBalance: compact.b,
     nodeCounter: compact.c,
     backgroundImage,
@@ -233,8 +209,8 @@ export async function importState(
     const data = JSON.parse(json);
 
     // Basic validation
-    if (!Array.isArray(data.n) || !Array.isArray(data.e)) {
-      return { type: "error", message: "Invalid data: missing nodes or edges." };
+    if (!Array.isArray(data.n)) {
+      return { type: "error", message: "Invalid data: missing nodes." };
     }
 
     const mapState = rebuildFromCompact(data as CompactMapExport, existingBgDataUrl);
@@ -250,7 +226,6 @@ export async function importState(
           events: [],
           history: [],
           historyIndex: -1,
-          editorMode: "CONNECT",
         },
       };
     }
@@ -278,7 +253,6 @@ export async function importState(
         events: [],
         history: [],
         historyIndex: -1,
-        editorMode: "CONNECT",
       },
     };
   } catch (err) {

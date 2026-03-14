@@ -1,12 +1,8 @@
-import { useCallback, useRef, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
-  ConnectionMode,
-  ConnectionLineType,
-  type Connection,
-  type DefaultEdgeOptions,
   useReactFlow,
   ReactFlowProvider,
   applyNodeChanges,
@@ -23,24 +19,14 @@ import type { GameNode, BackgroundImageState } from "../types/game";
 
 const nodeTypes = { gameNode: NodeDisplay as any };
 
-const defaultEdgeOptions: DefaultEdgeOptions = {
-  type: "straight",
-  style: { stroke: "#888", strokeWidth: 3 },
-};
-
 function MapEditorInner() {
   const nodes = useGameStore((s) => s.nodes);
-  const edges = useGameStore((s) => s.edges);
   const addNode = useGameStore((s) => s.addNode);
-  const addEdge = useGameStore((s) => s.addEdge);
   const removeNode = useGameStore((s) => s.removeNode);
-  const removeEdge = useGameStore((s) => s.removeEdge);
   const onNodesChange = useGameStore((s) => s.onNodesChange);
   const startGame = useGameStore((s) => s.startGame);
   const startingBalance = useGameStore((s) => s.startingBalance);
   const setStartingBalance = useGameStore((s) => s.setStartingBalance);
-  const editorMode = useGameStore((s) => s.editorMode);
-  const setEditorMode = useGameStore((s) => s.setEditorMode);
   const backgroundImage = useGameStore((s) => s.backgroundImage);
   const setBackgroundImage = useGameStore((s) => s.setBackgroundImage);
   const setBackgroundScale = useGameStore((s) => s.setBackgroundScale);
@@ -49,26 +35,6 @@ function MapEditorInner() {
   const { screenToFlowPosition } = useReactFlow();
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
-
-  // Hold Ctrl to temporarily switch to Move mode
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Control" && editorMode === "CONNECT") {
-        setEditorMode("MOVE");
-      }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Control") {
-        setEditorMode("CONNECT");
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [editorMode, setEditorMode]);
 
   const handleWrapperDoubleClick = useCallback(
     (event: React.MouseEvent) => {
@@ -88,15 +54,6 @@ function MapEditorInner() {
     [addNode, screenToFlowPosition]
   );
 
-  const handleConnect = useCallback(
-    (connection: Connection) => {
-      if (connection.source && connection.target) {
-        addEdge(connection.source, connection.target);
-      }
-    },
-    [addEdge]
-  );
-
   const handleNodesChange = useCallback(
     (changes: NodeChange<GameNode>[]) => {
       const deleteChanges = changes.filter((c) => c.type === "remove");
@@ -111,17 +68,6 @@ function MapEditorInner() {
       }
     },
     [nodes, onNodesChange, removeNode]
-  );
-
-  const handleEdgesChange = useCallback(
-    (changes: Array<{ type: string; id: string }>) => {
-      for (const change of changes) {
-        if (change.type === "remove") {
-          removeEdge(change.id);
-        }
-      }
-    },
-    [removeEdge]
   );
 
   const handleImageUpload = useCallback(
@@ -154,8 +100,6 @@ function MapEditorInner() {
     setBackgroundImage(null);
   }, [setBackgroundImage]);
 
-  const isConnectMode = editorMode === "CONNECT";
-
   const scalePercent = backgroundImage
     ? Math.round(backgroundImage.scale * 100)
     : 100;
@@ -167,33 +111,6 @@ function MapEditorInner() {
         <h1 className="text-lg font-bold text-white">Rail Rush</h1>
         <span className="text-gray-400">|</span>
         <span className="text-sm text-gray-300">Map Editor</span>
-
-        {/* Mode toggle */}
-        <div className="flex items-center bg-gray-700 rounded overflow-hidden">
-          <button
-            onClick={() => setEditorMode("CONNECT")}
-            className={`px-3 py-1 text-sm font-medium transition-colors ${
-              isConnectMode
-                ? "bg-blue-600 text-white"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            Connect
-          </button>
-          <button
-            onClick={() => setEditorMode("MOVE")}
-            className={`px-3 py-1 text-sm font-medium transition-colors ${
-              !isConnectMode
-                ? "bg-blue-600 text-white"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            Move
-          </button>
-        </div>
-        <span className="text-xs text-gray-500 hidden sm:inline">
-          Hold Ctrl to move temporarily
-        </span>
 
         <div className="flex items-center gap-2 ml-auto">
           <button
@@ -297,7 +214,7 @@ function MapEditorInner() {
             </button>
 
             <span className="text-xs text-gray-500 hidden lg:inline">
-              Drag image in Move mode to reposition
+              Drag image to reposition
             </span>
           </>
         )}
@@ -311,17 +228,9 @@ function MapEditorInner() {
       >
         <ReactFlow
           nodes={nodes}
-          edges={edges}
           nodeTypes={nodeTypes}
-          defaultEdgeOptions={defaultEdgeOptions}
-          onConnect={handleConnect}
           onNodesChange={handleNodesChange}
-          onEdgesChange={handleEdgesChange as any}
-          connectionMode={ConnectionMode.Loose}
-          connectionLineType={ConnectionLineType.Straight}
-          connectionLineStyle={{ stroke: "#888", strokeWidth: 3 }}
-          nodesDraggable={!isConnectMode}
-          nodesConnectable={isConnectMode}
+          nodesConnectable={false}
           zoomOnDoubleClick={false}
           deleteKeyCode="Delete"
           minZoom={0.01}
@@ -330,7 +239,7 @@ function MapEditorInner() {
           className="bg-gray-900"
         >
           <Background color="#444" gap={20} />
-          <MapBackground interactive={!isConnectMode} />
+          <MapBackground interactive />
           <Controls className="!bg-gray-700 !border-gray-600 !rounded [&>button]:!bg-gray-700 [&>button]:!border-gray-600 [&>button]:!fill-gray-300 [&>button:hover]:!bg-gray-600" />
         </ReactFlow>
       </div>
@@ -338,13 +247,9 @@ function MapEditorInner() {
       {/* Hints */}
       <div className="px-4 py-2 bg-gray-800 border-t border-gray-700 text-xs text-gray-400 flex gap-4 flex-wrap">
         <span>Double-click canvas to add node</span>
-        {isConnectMode ? (
-          <span>Drag from node to node to connect</span>
-        ) : (
-          <span>Drag nodes to move them</span>
-        )}
+        <span>Drag nodes to move them</span>
         <span>Click node to select, Delete to remove</span>
-        {backgroundImage && !isConnectMode && (
+        {backgroundImage && (
           <span>Drag background image to reposition</span>
         )}
       </div>

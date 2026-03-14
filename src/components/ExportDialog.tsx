@@ -100,7 +100,7 @@ export function ExportDialog({ onClose, mapOnly }: Props) {
             <p className="text-xs text-gray-500 mt-1">
               {mode === "game"
                 ? "Includes map layout, chip placements, pools, and active team."
-                : "Map layout only — nodes, edges, and settings. No game state."}
+                : "Map layout only — nodes and settings. No game state."}
             </p>
           </div>
         )}

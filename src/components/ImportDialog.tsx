@@ -93,10 +93,6 @@ export function ImportDialog({ onClose }: Props) {
     preview && preview.type !== "error"
       ? (preview.state.nodes?.length ?? 0)
       : 0;
-  const edgeCount =
-    preview && preview.type !== "error"
-      ? (preview.state.edges?.length ?? 0)
-      : 0;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -150,7 +146,7 @@ export function ImportDialog({ onClose }: Props) {
                 </p>
                 <ul className="text-xs text-gray-300 space-y-0.5">
                   <li>
-                    {nodeCount} nodes, {edgeCount} edges
+                    {nodeCount} nodes
                   </li>
                   {preview.state.startingBalance !== undefined && (
                     <li>Starting balance: {preview.state.startingBalance}</li>

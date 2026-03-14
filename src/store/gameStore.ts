@@ -4,11 +4,9 @@ import { NODE_SIZE } from "../components/NodeDisplay";
 import type {
   GameState,
   GameNode,
-  GameEdge,
   Team,
   HistoryAction,
   GameEvent,
-  EditorMode,
   BackgroundImageState,
 } from "../types/game";
 
@@ -21,10 +19,7 @@ interface GameActions {
   // Setup actions
   addNode: (position: { x: number; y: number }) => void;
   removeNode: (id: string) => void;
-  addEdge: (source: string, target: string) => void;
-  removeEdge: (id: string) => void;
   setStartingBalance: (balance: number) => void;
-  setEditorMode: (mode: EditorMode) => void;
   onNodesChange: (nodes: GameNode[]) => void;
 
   // Background image
@@ -59,14 +54,12 @@ const initialState: GameState = {
   phase: "SETUP",
   activeTeam: "RED",
   nodes: [],
-  edges: [],
   startingBalance: 20,
   chipPools: { RED: 20, BLUE: 20 },
   events: [],
   history: [],
   historyIndex: -1,
   nodeCounter: 0,
-  editorMode: "CONNECT",
   backgroundImage: null,
 };
 
@@ -98,40 +91,10 @@ export const useGameStore = create<GameState & GameActions>()(
       removeNode: (id) =>
         set((state) => ({
           nodes: state.nodes.filter((n) => n.id !== id),
-          edges: state.edges.filter(
-            (e) => e.source !== id && e.target !== id
-          ),
-        })),
-
-      addEdge: (source, target) =>
-        set((state) => {
-          // Prevent self-loops and duplicate edges
-          if (source === target) return state;
-          const exists = state.edges.some(
-            (e) =>
-              (e.source === source && e.target === target) ||
-              (e.source === target && e.target === source)
-          );
-          if (exists) return state;
-          const edge: GameEdge = {
-            id: nextId("edge"),
-            source,
-            target,
-            type: "straight",
-            style: { stroke: "#888", strokeWidth: 3 },
-          };
-          return { edges: [...state.edges, edge] };
-        }),
-
-      removeEdge: (id) =>
-        set((state) => ({
-          edges: state.edges.filter((e) => e.id !== id),
         })),
 
       setStartingBalance: (balance) =>
         set({ startingBalance: Math.max(1, balance) }),
-
-      setEditorMode: (mode) => set({ editorMode: mode }),
 
       onNodesChange: (nodes) => set({ nodes }),
 
@@ -413,10 +376,6 @@ export const useGameStore = create<GameState & GameActions>()(
     }),
     {
       name: "rail-rush-storage",
-      partialize: (state) => {
-        const { editorMode: _, ...rest } = state;
-        return rest;
-      },
     }
   )
 );

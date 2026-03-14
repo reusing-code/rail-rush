@@ -4,7 +4,7 @@ import { ViewportPortal, useStoreApi } from "@xyflow/react";
 /**
  * Renders the background image inside React Flow's viewport portal,
  * so it lives in flow-coordinate space and pans/zooms identically
- * to nodes and edges.
+ * to nodes.
  *
  * Uses CSS transform: scale() instead of setting large width/height
  * values, which avoids browser rendering limits on large elements.

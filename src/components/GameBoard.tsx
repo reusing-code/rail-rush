@@ -21,7 +21,6 @@ const nodeTypes = { gameNode: NodeDisplay as any };
 
 function GameBoardInner() {
   const nodes = useGameStore((s) => s.nodes);
-  const edges = useGameStore((s) => s.edges);
   const activeTeam = useGameStore((s) => s.activeTeam);
   const undo = useGameStore((s) => s.undo);
   const redo = useGameStore((s) => s.redo);
@@ -123,7 +122,6 @@ function GameBoardInner() {
       <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
-          edges={edges}
           nodeTypes={nodeTypes}
           onNodeClick={handleNodeClick}
           nodesDraggable={false}
