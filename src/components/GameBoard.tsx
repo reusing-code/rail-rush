@@ -12,6 +12,8 @@ import { MapBackground } from "./MapBackground";
 import { TeamSwitch } from "./TeamSwitch";
 import { Scoreboard } from "./Scoreboard";
 import { AwardChipsDialog } from "./AwardChipsDialog";
+import { ExportDialog } from "./ExportDialog";
+import { ImportDialog } from "./ImportDialog";
 import { EventLog } from "./EventLog";
 import { useGameStore } from "../store/gameStore";
 
@@ -30,6 +32,8 @@ function GameBoardInner() {
 
   const [showAwardDialog, setShowAwardDialog] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -85,6 +89,19 @@ function GameBoardInner() {
             title="Redo (Ctrl+Shift+Z)"
           >
             Redo
+          </button>
+          <div className="mx-1 border-l border-gray-600 h-6" />
+          <button
+            onClick={() => setShowExport(true)}
+            className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+          >
+            Export
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+          >
+            Import
           </button>
           <div className="mx-1 border-l border-gray-600 h-6" />
           <button
@@ -164,6 +181,14 @@ function GameBoardInner() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Export/Import dialogs */}
+      {showExport && (
+        <ExportDialog onClose={() => setShowExport(false)} />
+      )}
+      {showImport && (
+        <ImportDialog onClose={() => setShowImport(false)} />
       )}
     </div>
   );

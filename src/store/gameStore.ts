@@ -50,6 +50,9 @@ interface GameActions {
   // Derived
   getNodeControl: (nodeId: string) => Team | null;
   getScoreboard: () => { RED: number; BLUE: number; leader: Team | null };
+
+  // Import
+  applyImport: (partial: Partial<GameState>) => void;
 }
 
 const initialState: GameState = {
@@ -387,6 +390,25 @@ export const useGameStore = create<GameState & GameActions>()(
           BLUE: blue,
           leader: red > blue ? "RED" : blue > red ? "BLUE" : null,
         };
+      },
+
+      // --- Import ---
+
+      applyImport: (partial) => {
+        // If importing has background settings but no dataUrl, preserve
+        // the existing background image's dataUrl
+        const current = get();
+        if (
+          partial.backgroundImage &&
+          !partial.backgroundImage.dataUrl &&
+          current.backgroundImage?.dataUrl
+        ) {
+          partial.backgroundImage = {
+            ...partial.backgroundImage,
+            dataUrl: current.backgroundImage.dataUrl,
+          };
+        }
+        set(partial);
       },
     }),
     {

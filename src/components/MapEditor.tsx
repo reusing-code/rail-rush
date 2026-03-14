@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -16,6 +16,9 @@ import "@xyflow/react/dist/style.css";
 import { NodeDisplay } from "./NodeDisplay";
 import { MapBackground } from "./MapBackground";
 import { useGameStore } from "../store/gameStore";
+import { ExportDialog } from "./ExportDialog";
+import { ImportDialog } from "./ImportDialog";
+import { readAndResizeImage } from "../utils/imageUtils";
 import type { GameNode, BackgroundImageState } from "../types/game";
 
 const nodeTypes = { gameNode: NodeDisplay as any };
@@ -24,51 +27,6 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   type: "straight",
   style: { stroke: "#888", strokeWidth: 3 },
 };
-
-/** Max dimension (width or height) to resize uploaded images to, to keep localStorage manageable. */
-const MAX_IMAGE_DIMENSION = 2048;
-
-/**
- * Reads a File as a data URL, resizing if necessary to fit within MAX_IMAGE_DIMENSION.
- * Returns the data URL and natural dimensions of the (possibly resized) image.
- */
-function readAndResizeImage(
-  file: File
-): Promise<{ dataUrl: string; width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-
-        // Resize if too large
-        if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
-          const ratio = Math.min(
-            MAX_IMAGE_DIMENSION / width,
-            MAX_IMAGE_DIMENSION / height
-          );
-          width = Math.round(width * ratio);
-          height = Math.round(height * ratio);
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Use JPEG at 0.8 quality for smaller size, PNG for transparency
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
-        resolve({ dataUrl, width, height });
-      };
-      img.onerror = reject;
-      img.src = reader.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 function MapEditorInner() {
   const nodes = useGameStore((s) => s.nodes);
@@ -89,6 +47,8 @@ function MapEditorInner() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { screenToFlowPosition } = useReactFlow();
+  const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   // Hold Ctrl to temporarily switch to Move mode
   useEffect(() => {
@@ -236,6 +196,19 @@ function MapEditorInner() {
         </span>
 
         <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => setShowExport(true)}
+            className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+          >
+            Export
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+          >
+            Import
+          </button>
+          <div className="mx-1 border-l border-gray-600 h-6" />
           <label className="text-sm text-gray-300">Starting chips:</label>
           <input
             type="number"
@@ -375,6 +348,14 @@ function MapEditorInner() {
           <span>Drag background image to reposition</span>
         )}
       </div>
+
+      {/* Export/Import dialogs */}
+      {showExport && (
+        <ExportDialog onClose={() => setShowExport(false)} mapOnly />
+      )}
+      {showImport && (
+        <ImportDialog onClose={() => setShowImport(false)} />
+      )}
     </div>
   );
 }
