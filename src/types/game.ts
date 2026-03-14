@@ -32,6 +32,19 @@ export type HistoryAction =
 
 export type EditorMode = "CONNECT" | "MOVE";
 
+export interface BackgroundImageState {
+  /** Base64 data URL of the uploaded image */
+  dataUrl: string;
+  /** Scale factor (1 = original size in flow coordinates) */
+  scale: number;
+  /** Position offset in flow coordinates */
+  x: number;
+  y: number;
+  /** Natural dimensions of the image */
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
 export interface GameState {
   phase: GamePhase;
   activeTeam: Team;
@@ -44,4 +57,5 @@ export interface GameState {
   historyIndex: number;
   nodeCounter: number;
   editorMode: EditorMode;
+  backgroundImage: BackgroundImageState | null;
 }

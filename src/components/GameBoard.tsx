@@ -8,6 +8,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { NodeDisplay } from "./NodeDisplay";
+import { MapBackground } from "./MapBackground";
 import { TeamSwitch } from "./TeamSwitch";
 import { Scoreboard } from "./Scoreboard";
 import { AwardChipsDialog } from "./AwardChipsDialog";
@@ -112,10 +113,13 @@ function GameBoardInner() {
           nodesConnectable={false}
           elementsSelectable={false}
           zoomOnDoubleClick={false}
+          minZoom={0.01}
+          maxZoom={5}
           fitView
           className="bg-gray-900"
         >
           <Background color="#444" gap={20} />
+          <MapBackground />
           <Controls className="!bg-gray-700 !border-gray-600 !rounded [&>button]:!bg-gray-700 [&>button]:!border-gray-600 [&>button]:!fill-gray-300 [&>button:hover]:!bg-gray-600" />
         </ReactFlow>
 

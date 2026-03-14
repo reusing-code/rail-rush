@@ -8,6 +8,7 @@ import type {
   HistoryAction,
   GameEvent,
   EditorMode,
+  BackgroundImageState,
 } from "../types/game";
 
 let idCounter = 0;
@@ -25,6 +26,11 @@ interface GameActions {
   setStartingBalance: (balance: number) => void;
   setEditorMode: (mode: EditorMode) => void;
   onNodesChange: (nodes: GameNode[]) => void;
+
+  // Background image
+  setBackgroundImage: (image: BackgroundImageState | null) => void;
+  setBackgroundScale: (scale: number) => void;
+  setBackgroundPosition: (x: number, y: number) => void;
 
   // Phase transitions
   startGame: () => void;
@@ -58,6 +64,7 @@ const initialState: GameState = {
   historyIndex: -1,
   nodeCounter: 0,
   editorMode: "CONNECT",
+  backgroundImage: null,
 };
 
 export const useGameStore = create<GameState & GameActions>()(
@@ -131,6 +138,29 @@ export const useGameStore = create<GameState & GameActions>()(
       setEditorMode: (mode) => set({ editorMode: mode }),
 
       onNodesChange: (nodes) => set({ nodes }),
+
+      // --- Background image ---
+
+      setBackgroundImage: (image) => set({ backgroundImage: image }),
+
+      setBackgroundScale: (scale) =>
+        set((state) => {
+          if (!state.backgroundImage) return state;
+          return {
+            backgroundImage: {
+              ...state.backgroundImage,
+              scale: Math.max(0.05, Math.min(50, scale)),
+            },
+          };
+        }),
+
+      setBackgroundPosition: (x, y) =>
+        set((state) => {
+          if (!state.backgroundImage) return state;
+          return {
+            backgroundImage: { ...state.backgroundImage, x, y },
+          };
+        }),
 
       // --- Phase transitions ---
 
