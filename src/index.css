@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Hide React Flow's default selection outline — we use our own yellow ring */
+.react-flow__node.selected > div {
+  outline: none;
+}
+.react-flow__node.selected {
+  outline: none !important;
+  box-shadow: none !important;
+}
