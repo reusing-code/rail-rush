@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -35,6 +35,26 @@ function MapEditorInner() {
   const { screenToFlowPosition } = useReactFlow();
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [bgEditMode, setBgEditMode] = useState(false);
+  const [altHeld, setAltHeld] = useState(false);
+
+  // Track Alt key to temporarily enable background move mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Alt") setAltHeld(true);
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Alt") setAltHeld(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
+  const bgInteractive = backgroundImage && (bgEditMode || altHeld);
 
   const handleWrapperDoubleClick = useCallback(
     (event: React.MouseEvent) => {
@@ -213,8 +233,24 @@ function MapEditorInner() {
               Reset
             </button>
 
+            <div className="mx-1 border-l border-gray-600 h-5" />
+
+            <button
+              onClick={() => setBgEditMode(!bgEditMode)}
+              className={`px-3 py-0.5 text-xs rounded transition-colors ${
+                bgEditMode
+                  ? "bg-blue-600 hover:bg-blue-500 text-white"
+                  : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+              }`}
+              title="Toggle background move mode (or hold Alt)"
+            >
+              Move BG
+            </button>
+
             <span className="text-xs text-gray-500 hidden lg:inline">
-              Drag image to reposition
+              {bgEditMode
+                ? "Drag to reposition background"
+                : "Hold Alt + drag to reposition background"}
             </span>
           </>
         )}
@@ -239,7 +275,7 @@ function MapEditorInner() {
           className="bg-gray-900"
         >
           <Background color="#444" gap={20} />
-          <MapBackground interactive />
+          <MapBackground interactive={!!bgInteractive} />
           <Controls className="!bg-gray-700 !border-gray-600 !rounded [&>button]:!bg-gray-700 [&>button]:!border-gray-600 [&>button]:!fill-gray-300 [&>button:hover]:!bg-gray-600" />
         </ReactFlow>
       </div>
@@ -249,8 +285,11 @@ function MapEditorInner() {
         <span>Double-click canvas to add node</span>
         <span>Drag nodes to move them</span>
         <span>Click node to select, Delete to remove</span>
-        {backgroundImage && (
-          <span>Drag background image to reposition</span>
+        {backgroundImage && !bgEditMode && (
+          <span>Hold Alt + drag background to reposition</span>
+        )}
+        {backgroundImage && bgEditMode && (
+          <span>Drag background to reposition (Move BG active)</span>
         )}
       </div>
 
