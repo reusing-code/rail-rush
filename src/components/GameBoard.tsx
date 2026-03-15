@@ -28,6 +28,7 @@ function GameBoardInner() {
   const canRedo = useGameStore((s) => s.canRedo);
   const resetToSetup = useGameStore((s) => s.resetToSetup);
   const placeChip = useGameStore((s) => s.placeChip);
+  const removeChip = useGameStore((s) => s.removeChip);
 
   const [showAwardDialog, setShowAwardDialog] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -39,6 +40,14 @@ function GameBoardInner() {
       placeChip(node.id);
     },
     [placeChip]
+  );
+
+  const handleNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      removeChip(node.id);
+    },
+    [removeChip]
   );
 
   // Keyboard shortcuts
@@ -124,6 +133,7 @@ function GameBoardInner() {
           nodes={nodes}
           nodeTypes={nodeTypes}
           onNodeClick={handleNodeClick}
+          onNodeContextMenu={handleNodeContextMenu}
           nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable={false}

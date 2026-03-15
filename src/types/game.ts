@@ -26,6 +26,7 @@ export interface GameEvent {
 
 export type HistoryAction =
   | { type: "PLACE_CHIP"; nodeId: string; team: Team }
+  | { type: "REMOVE_CHIP"; nodeId: string; team: Team }
   | { type: "AWARD_CHIPS"; eventId: string; team: Team; amount: number };
 
 export interface BackgroundImageState {

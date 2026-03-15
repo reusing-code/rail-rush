@@ -33,6 +33,7 @@ interface GameActions {
 
   // Playing actions
   placeChip: (nodeId: string) => boolean;
+  removeChip: (nodeId: string) => boolean;
   switchTeam: () => void;
   awardChips: (team: Team, amount: number, label: string) => void;
 
@@ -198,6 +199,44 @@ export const useGameStore = create<GameState & GameActions>()(
         return true;
       },
 
+      removeChip: (nodeId) => {
+        const state = get();
+        const team = state.activeTeam;
+        const node = state.nodes.find((n) => n.id === nodeId);
+        if (!node || node.data.chips[team] <= 0) return false;
+
+        const action: HistoryAction = { type: "REMOVE_CHIP", nodeId, team };
+
+        const newHistory = [
+          ...state.history.slice(0, state.historyIndex + 1),
+          action,
+        ];
+
+        set({
+          nodes: state.nodes.map((n) =>
+            n.id === nodeId
+              ? {
+                  ...n,
+                  data: {
+                    ...n.data,
+                    chips: {
+                      ...n.data.chips,
+                      [team]: n.data.chips[team] - 1,
+                    },
+                  },
+                }
+              : n
+          ),
+          chipPools: {
+            ...state.chipPools,
+            [team]: state.chipPools[team] + 1,
+          },
+          history: newHistory,
+          historyIndex: newHistory.length - 1,
+        });
+        return true;
+      },
+
       switchTeam: () =>
         set((state) => ({
           activeTeam: state.activeTeam === "RED" ? "BLUE" : "RED",
@@ -266,6 +305,29 @@ export const useGameStore = create<GameState & GameActions>()(
             },
             historyIndex: state.historyIndex - 1,
           });
+        } else if (action.type === "REMOVE_CHIP") {
+          // Undo remove: put the chip back on the node
+          set({
+            nodes: state.nodes.map((n) =>
+              n.id === action.nodeId
+                ? {
+                    ...n,
+                    data: {
+                      ...n.data,
+                      chips: {
+                        ...n.data.chips,
+                        [action.team]: n.data.chips[action.team] + 1,
+                      },
+                    },
+                  }
+                : n
+            ),
+            chipPools: {
+              ...state.chipPools,
+              [action.team]: state.chipPools[action.team] - 1,
+            },
+            historyIndex: state.historyIndex - 1,
+          });
         } else if (action.type === "AWARD_CHIPS") {
           set({
             chipPools: {
@@ -303,6 +365,29 @@ export const useGameStore = create<GameState & GameActions>()(
             chipPools: {
               ...state.chipPools,
               [action.team]: state.chipPools[action.team] - 1,
+            },
+            historyIndex: state.historyIndex + 1,
+          });
+        } else if (action.type === "REMOVE_CHIP") {
+          // Redo remove: take the chip off again
+          set({
+            nodes: state.nodes.map((n) =>
+              n.id === action.nodeId
+                ? {
+                    ...n,
+                    data: {
+                      ...n.data,
+                      chips: {
+                        ...n.data.chips,
+                        [action.team]: n.data.chips[action.team] - 1,
+                      },
+                    },
+                  }
+                : n
+            ),
+            chipPools: {
+              ...state.chipPools,
+              [action.team]: state.chipPools[action.team] + 1,
             },
             historyIndex: state.historyIndex + 1,
           });
