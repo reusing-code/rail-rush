@@ -90,9 +90,14 @@ function base64urlToUint8(str: string): Uint8Array {
   return bytes;
 }
 
-/** Round to 1 decimal place to save space */
+/** Round to 1 decimal place to save space (positions) */
 function r(n: number): number {
   return Math.round(n * 10) / 10;
+}
+
+/** Round to 4 decimal places to preserve scale precision (e.g. 593% stays 593%) */
+function rScale(n: number): number {
+  return Math.round(n * 10000) / 10000;
 }
 
 // --- Export functions ---
@@ -111,7 +116,7 @@ function buildCompactMap(state: GameState): CompactMapExport {
 
   if (state.backgroundImage) {
     compact.bg = {
-      s: r(state.backgroundImage.scale),
+      s: rScale(state.backgroundImage.scale),
       x: r(state.backgroundImage.x),
       y: r(state.backgroundImage.y),
       w: state.backgroundImage.naturalWidth,
